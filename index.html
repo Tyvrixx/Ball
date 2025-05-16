@@ -51,7 +51,6 @@
 <body>
   <canvas id="orbitCanvas"></canvas>
 
-  <!-- YouTube iframe will be replaced by API player -->
   <div id="audio-video"></div>
 
   <div id="songChooser">
@@ -89,14 +88,21 @@
     ctx.lineWidth = 3;
     ctx.stroke();
 
+    // Bounce sound setup
+    // Short 'pop' sound encoded in base64 (wav format)
+    const bounceSoundSrc = "data:audio/wav;base64,UklGRlIAAABXQVZFZm10IBAAAAABAAEAgD4AAAB9AAACABAAZGF0YRAAAACAgICAgICAgP8AAP//AAD///8AAACAgICAgICAgICAgICA=";
+    const bounceAudio = new Audio(bounceSoundSrc);
+    // We'll control volume with slider value (scaled to 0.0 - 1.0)
+    
     function draw() {
-      earthX += velocityX;
-      earthY += velocityY;
+      earthX += velocityX * (1/60);
+      earthY += velocityY * (1/60);
 
       const dx = earthX - centerX;
       const dy = earthY - centerY;
       const distanceFromCenter = Math.sqrt(dx * dx + dy * dy);
 
+      // Bounce off circular edge
       if (distanceFromCenter + earthRadius >= arenaRadius) {
         const normalX = dx / distanceFromCenter;
         const normalY = dy / distanceFromCenter;
@@ -111,10 +117,25 @@
         const overlap = (distanceFromCenter + earthRadius) - arenaRadius;
         earthX -= normalX * overlap;
         earthY -= normalY * overlap;
+
+        // Play bounce sound
+        bounceAudio.currentTime = 0;
+        bounceAudio.volume = volumeSlider.value / 100; // sync volume
+        bounceAudio.play();
       }
 
       trail.push({ x: earthX, y: earthY });
 
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Redraw arena
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, arenaRadius, 0, Math.PI * 2);
+      ctx.strokeStyle = 'white';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // Draw trail
       ctx.beginPath();
       ctx.strokeStyle = 'lightblue';
       ctx.lineWidth = 3;
@@ -127,6 +148,7 @@
       }
       ctx.stroke();
 
+      // Draw Earth
       ctx.beginPath();
       ctx.arc(earthX, earthY, earthRadius, 0, Math.PI * 2);
       ctx.fillStyle = 'blue';
