@@ -8,11 +8,12 @@
       margin: 0;
       overflow: hidden;
       background-color: black;
+      font-family: Arial, sans-serif;
+      color: white;
     }
     canvas {
       display: block;
     }
-    /* Hide the iframe completely */
     #audio-video {
       position: absolute;
       width: 0;
@@ -20,6 +21,29 @@
       opacity: 0;
       pointer-events: none;
       border: none;
+    }
+    #songChooser {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 10px;
+      border-radius: 8px;
+      user-select: none;
+      z-index: 10;
+    }
+    label {
+      margin-right: 8px;
+      font-size: 14px;
+    }
+    select {
+      background: black;
+      color: white;
+      border: 1px solid white;
+      border-radius: 4px;
+      font-size: 14px;
+      padding: 3px 6px;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -34,6 +58,14 @@
     allowfullscreen
     frameborder="0"
   ></iframe>
+
+  <div id="songChooser">
+    <label for="songSelect">Choose Song:</label>
+    <select id="songSelect">
+      <option value="yJsGC16hLP8" selected>Original Song</option>
+      <option value="OABqepSlfmA">New Song</option>
+    </select>
+  </div>
 
   <script>
     const canvas = document.getElementById('orbitCanvas');
@@ -112,6 +144,16 @@
     }
 
     draw();
+
+    // Song chooser logic
+    const iframe = document.getElementById('audio-video');
+    const select = document.getElementById('songSelect');
+
+    select.addEventListener('change', () => {
+      const videoId = select.value;
+      // Update iframe src with autoplay & loop params
+      iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&loop=1&playlist=${videoId}&mute=0&controls=0&disablekb=1&modestbranding=1&rel=0&showinfo=0`;
+    });
   </script>
 </body>
 </html>
