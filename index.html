@@ -76,27 +76,34 @@
 
     let earthX = centerX + 200;
     let earthY = centerY;
-    let velocityX = 100;
-    let velocityY = 50;
+    let velocityX = 100; // pixels per second
+    let velocityY = 50;  // pixels per second
 
     const trail = [];
 
-    // Draw arena ONCE
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, arenaRadius, 0, Math.PI * 2);
-    ctx.strokeStyle = 'white';
-    ctx.lineWidth = 3;
-    ctx.stroke();
-
-    // Bounce sound setup
-    // Short 'pop' sound encoded in base64 (wav format)
+    // Bounce sound setup (short pop)
     const bounceSoundSrc = "data:audio/wav;base64,UklGRlIAAABXQVZFZm10IBAAAAABAAEAgD4AAAB9AAACABAAZGF0YRAAAACAgICAgICAgP8AAP//AAD///8AAACAgICAgICAgICAgICA=";
     const bounceAudio = new Audio(bounceSoundSrc);
-    // We'll control volume with slider value (scaled to 0.0 - 1.0)
-    
+
+    const volumeSlider = document.getElementById('volumeSlider');
+    const songSelect = document.getElementById('songSelect');
+
+    // Draw arena once for static background
+    function drawArena() {
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, arenaRadius, 0, Math.PI * 2);
+      ctx.strokeStyle = 'white';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    }
+
+    drawArena();
+
+    // Main animation loop
     function draw() {
-      earthX += velocityX * (1/60);
-      earthY += velocityY * (1/60);
+      // Move earth assuming 60fps timing
+      earthX += velocityX / 60;
+      earthY += velocityY / 60;
 
       const dx = earthX - centerX;
       const dy = earthY - centerY;
@@ -111,6 +118,7 @@
         velocityX -= 2 * dot * normalX;
         velocityY -= 2 * dot * normalY;
 
+        // Small random velocity tweak for more natural bounce
         velocityX += (Math.random() - 0.5) * 0.5;
         velocityY += (Math.random() - 0.5) * 0.5;
 
@@ -118,22 +126,19 @@
         earthX -= normalX * overlap;
         earthY -= normalY * overlap;
 
-        // Play bounce sound
+        // Play bounce sound with current volume
         bounceAudio.currentTime = 0;
-        bounceAudio.volume = volumeSlider.value / 100; // sync volume
+        bounceAudio.volume = volumeSlider.value / 100;
         bounceAudio.play();
       }
 
       trail.push({ x: earthX, y: earthY });
 
+      // Clear canvas each frame
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       // Redraw arena
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, arenaRadius, 0, Math.PI * 2);
-      ctx.strokeStyle = 'white';
-      ctx.lineWidth = 3;
-      ctx.stroke();
+      drawArena();
 
       // Draw trail
       ctx.beginPath();
@@ -162,15 +167,12 @@
     // --- YouTube Player API setup ---
     let player;
     const playerContainer = document.getElementById('audio-video');
-    const songSelect = document.getElementById('songSelect');
-    const volumeSlider = document.getElementById('volumeSlider');
 
-    // Load YouTube IFrame API
+    // Load YouTube IFrame API script dynamically
     let tag = document.createElement('script');
     tag.src = "https://www.youtube.com/iframe_api";
     document.head.appendChild(tag);
 
-    // Create player after API ready
     function onYouTubeIframeAPIReady() {
       player = new YT.Player('audio-video', {
         height: '0',
