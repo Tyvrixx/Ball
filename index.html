@@ -2,184 +2,116 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>60 FPS Ball + Music Play</title>
+  <title>Bouncing Earth in Circular Arena</title>
   <style>
-    html, body {
-      margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden;
-      background: black;
-      color: white;
-      user-select: none;
-      font-family: Arial, sans-serif;
-    }
-    #loadingScreen {
-      position: fixed;
-      top:0; left:0; right:0; bottom:0;
-      background: black;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 2.5rem;
-      cursor: pointer;
-      z-index: 1000;
-      transition: opacity 0.5s ease;
-    }
-    #loadingScreen.hidden {
-      opacity: 0;
-      pointer-events: none;
-    }
-    #player {
-      position: absolute;
-      width: 0; height: 0;
-      opacity: 0;
-      pointer-events: none;
+    body {
+      margin: 0;
+      overflow: hidden;
+      background-color: black;
     }
     canvas {
       display: block;
-      background: black;
+    }
+    /* Hide the iframe completely */
+    #audio-video {
+      position: absolute;
+      width: 0;
+      height: 0;
+      opacity: 0;
+      pointer-events: none;
+      border: none;
     }
   </style>
 </head>
 <body>
+  <canvas id="orbitCanvas"></canvas>
 
-<div id="loadingScreen">Tap to enter</div>
-<div id="player"></div>
-<canvas id="canvas"></canvas>
+  <!-- Hidden YouTube video iframe -->
+  <iframe
+    id="audio-video"
+    src="https://www.youtube.com/embed/yJsGC16hLP8?autoplay=1&loop=1&playlist=yJsGC16hLP8&mute=0&controls=0&disablekb=1&modestbranding=1&rel=0&showinfo=0"
+    allow="autoplay"
+    allowfullscreen
+    frameborder="0"
+  ></iframe>
 
-<script src="https://www.youtube.com/iframe_api"></script>
-<script>
-  const loadingScreen = document.getElementById('loadingScreen');
-  const canvas = document.getElementById('canvas');
-  const ctx = canvas.getContext('2d');
-
-  // Resize canvas full screen
-  function resize() {
+  <script>
+    const canvas = document.getElementById('orbitCanvas');
+    const ctx = canvas.getContext('2d');
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-  }
-  window.addEventListener('resize', resize);
-  resize();
 
-  const centerX = canvas.width / 2;
-  const centerY = canvas.height / 2;
-  const arenaRadius = Math.min(canvas.width, canvas.height) * 0.45;
-  const earthRadius = 8;
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const arenaRadius = Math.min(canvas.width, canvas.height) * 0.45;
+    const earthRadius = 8;
 
-  // Ball initial position and velocity (faster speed)
-  let earthX = centerX + 200;
-  let earthY = centerY;
-  let velocityX = 180;
-  let velocityY = 90;
+    let earthX = centerX + 200;
+    let earthY = centerY;
+    let velocityX = 100;
+    let velocityY = 50;
 
-  // Persistent trail array
-  const trail = [];
+    const trail = [];
 
-  // YouTube player variables
-  let player;
-  let playerReady = false;
-
-  // YouTube API ready callback
-  function onYouTubeIframeAPIReady() {
-    player = new YT.Player('player', {
-      height: '0',
-      width: '0',
-      videoId: 'yJsGC16hLP8',
-      playerVars: {
-        autoplay: 0,
-        controls: 0,
-        disablekb: 1,
-        loop: 1,
-        playlist: 'yJsGC16hLP8',
-        modestbranding: 1,
-        rel: 0,
-        mute: 1,
-      },
-      events: {
-        onReady: () => { playerReady = true; }
-      }
-    });
-  }
-
-  // Fixed timestep setup for 60 FPS
-  const fps = 60;
-  const timestep = 1 / fps;
-
-  function drawArena() {
+    // Draw arena ONCE
     ctx.beginPath();
     ctx.arc(centerX, centerY, arenaRadius, 0, Math.PI * 2);
     ctx.strokeStyle = 'white';
     ctx.lineWidth = 3;
     ctx.stroke();
-  }
 
-  function update() {
-    earthX += velocityX * timestep;
-    earthY += velocityY * timestep;
+    function draw() {
+      // Move Earth
+      earthX += velocityX;
+      earthY += velocityY;
 
-    const dx = earthX - centerX;
-    const dy = earthY - centerY;
-    const dist = Math.sqrt(dx * dx + dy * dy);
+      const dx = earthX - centerX;
+      const dy = earthY - centerY;
+      const distanceFromCenter = Math.sqrt(dx * dx + dy * dy);
 
-    if (dist + earthRadius >= arenaRadius) {
-      const normalX = dx / dist;
-      const normalY = dy / dist;
-      const dot = velocityX * normalX + velocityY * normalY;
+      // Bounce off circular edge
+      if (distanceFromCenter + earthRadius >= arenaRadius) {
+        const normalX = dx / distanceFromCenter;
+        const normalY = dy / distanceFromCenter;
+        const dot = velocityX * normalX + velocityY * normalY;
 
-      velocityX -= 2 * dot * normalX;
-      velocityY -= 2 * dot * normalY;
+        velocityX -= 2 * dot * normalX;
+        velocityY -= 2 * dot * normalY;
 
-      velocityX += (Math.random() - 0.5) * 0.5;
-      velocityY += (Math.random() - 0.5) * 0.5;
+        velocityX += (Math.random() - 0.5) * 0.5;
+        velocityY += (Math.random() - 0.5) * 0.5;
 
-      const overlap = (dist + earthRadius) - arenaRadius;
-      earthX -= normalX * overlap;
-      earthY -= normalY * overlap;
+        const overlap = (distanceFromCenter + earthRadius) - arenaRadius;
+        earthX -= normalX * overlap;
+        earthY -= normalY * overlap;
+      }
+
+      // Add to trail
+      trail.push({ x: earthX, y: earthY });
+
+      // Draw trail
+      ctx.beginPath();
+      ctx.strokeStyle = 'lightblue';
+      ctx.lineWidth = 3;
+      for (let i = 0; i < trail.length; i++) {
+        if (i === 0) {
+          ctx.moveTo(trail[i].x, trail[i].y);
+        } else {
+          ctx.lineTo(trail[i].x, trail[i].y);
+        }
+      }
+      ctx.stroke();
+
+      // Draw Earth
+      ctx.beginPath();
+      ctx.arc(earthX, earthY, earthRadius, 0, Math.PI * 2);
+      ctx.fillStyle = 'blue';
+      ctx.fill();
+
+      requestAnimationFrame(draw);
     }
 
-    trail.push({ x: earthX, y: earthY });
-  }
-
-  function render() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawArena();
-
-    ctx.beginPath();
-    ctx.strokeStyle = 'lightblue';
-    ctx.lineWidth = 3;
-    for (let i = 0; i < trail.length; i++) {
-      if (i === 0) ctx.moveTo(trail[i].x, trail[i].y);
-      else ctx.lineTo(trail[i].x, trail[i].y);
-    }
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.arc(earthX, earthY, earthRadius, 0, Math.PI * 2);
-    ctx.fillStyle = 'blue';
-    ctx.fill();
-  }
-
-  function loop() {
-    update();
-    render();
-    requestAnimationFrame(loop);
-  }
-
-  loadingScreen.addEventListener('click', async () => {
-    if (!playerReady) return alert('Video loading, please wait a moment.');
-
-    player.unMute();
-    player.setVolume(100);
-    try {
-      await player.playVideo();
-    } catch (e) {
-      // Play might fail due to browser policy - fallback
-      console.warn('Playback failed:', e);
-    }
-
-    loadingScreen.classList.add('hidden');
-    loop();
-  });
-</script>
-
+    draw();
+  </script>
 </body>
 </html>
