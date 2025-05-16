@@ -62,6 +62,7 @@
       <option value="RuBdfwaJOsQ">Song 4</option>
       <option value="gU3FoglpxEU">Song 5</option>
       <option value="WSxKmq5DX2o">Song 6</option>
+      <option value="">Nothing</option>
     </select>
     <label for="volumeSlider" style="margin-left: 12px;">Volume:</label>
     <input type="range" id="volumeSlider" min="0" max="100" value="100" />
@@ -80,12 +81,11 @@
 
     let earthX = centerX + 200;
     let earthY = centerY;
-    let velocityX = 200; // pixels per frame assumption
+    let velocityX = 200;
     let velocityY = 100;
 
     const trail = [];
 
-    // Use your GitHub-hosted pop.wav file for bounce sound
     const popSound = new Audio('https://github.com/Tyvrixx/Ball/raw/refs/heads/main/pop.wav');
 
     const volumeSlider = document.getElementById('volumeSlider');
@@ -99,10 +99,8 @@
       ctx.stroke();
     }
 
-    drawArena();
-
     function draw() {
-      earthX += velocityX / 60;  // adjusting for ~60fps
+      earthX += velocityX / 60;
       earthY += velocityY / 60;
 
       const dx = earthX - centerX;
@@ -124,7 +122,6 @@
         earthX -= normalX * overlap;
         earthY -= normalY * overlap;
 
-        // Play pop sound on bounce with volume from slider
         popSound.currentTime = 0;
         popSound.volume = volumeSlider.value / 100;
         popSound.play();
@@ -157,11 +154,11 @@
 
     draw();
 
-    // --- YouTube Player API setup ---
+    // YouTube Player API setup
     let player;
     const playerContainer = document.getElementById('audio-video');
 
-    let tag = document.createElement('script');
+    const tag = document.createElement('script');
     tag.src = "https://www.youtube.com/iframe_api";
     document.head.appendChild(tag);
 
@@ -192,8 +189,13 @@
     }
 
     songSelect.addEventListener('change', () => {
-      if (player && player.loadVideoById) {
-        player.loadVideoById(songSelect.value);
+      if (!player) return;
+      const selected = songSelect.value;
+
+      if (selected === "") {
+        player.stopVideo();
+      } else {
+        player.loadVideoById(selected);
         player.setLoop(true);
         player.setVolume(volumeSlider.value);
       }
