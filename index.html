@@ -76,19 +76,17 @@
 
     let earthX = centerX + 200;
     let earthY = centerY;
-    let velocityX = 100; // pixels per second
-    let velocityY = 50;  // pixels per second
+    let velocityX = 100; // pixels per frame assumption
+    let velocityY = 50;
 
     const trail = [];
 
-    // Bounce sound setup (short pop)
-    const bounceSoundSrc = "data:audio/wav;base64,UklGRlIAAABXQVZFZm10IBAAAAABAAEAgD4AAAB9AAACABAAZGF0YRAAAACAgICAgICAgP8AAP//AAD///8AAACAgICAgICAgICAgICA=";
-    const bounceAudio = new Audio(bounceSoundSrc);
+    // Use your GitHub-hosted pop.wav file for bounce sound
+    const popSound = new Audio('https://github.com/Tyvrixx/Ball/raw/refs/heads/main/pop.wav');
 
     const volumeSlider = document.getElementById('volumeSlider');
     const songSelect = document.getElementById('songSelect');
 
-    // Draw arena once for static background
     function drawArena() {
       ctx.beginPath();
       ctx.arc(centerX, centerY, arenaRadius, 0, Math.PI * 2);
@@ -99,17 +97,14 @@
 
     drawArena();
 
-    // Main animation loop
     function draw() {
-      // Move earth assuming 60fps timing
-      earthX += velocityX / 60;
+      earthX += velocityX / 60;  // adjusting for ~60fps
       earthY += velocityY / 60;
 
       const dx = earthX - centerX;
       const dy = earthY - centerY;
       const distanceFromCenter = Math.sqrt(dx * dx + dy * dy);
 
-      // Bounce off circular edge
       if (distanceFromCenter + earthRadius >= arenaRadius) {
         const normalX = dx / distanceFromCenter;
         const normalY = dy / distanceFromCenter;
@@ -118,7 +113,6 @@
         velocityX -= 2 * dot * normalX;
         velocityY -= 2 * dot * normalY;
 
-        // Small random velocity tweak for more natural bounce
         velocityX += (Math.random() - 0.5) * 0.5;
         velocityY += (Math.random() - 0.5) * 0.5;
 
@@ -126,21 +120,17 @@
         earthX -= normalX * overlap;
         earthY -= normalY * overlap;
 
-        // Play bounce sound with current volume
-        bounceAudio.currentTime = 0;
-        bounceAudio.volume = volumeSlider.value / 100;
-        bounceAudio.play();
+        // Play pop sound on bounce with volume from slider
+        popSound.currentTime = 0;
+        popSound.volume = volumeSlider.value / 100;
+        popSound.play();
       }
 
       trail.push({ x: earthX, y: earthY });
 
-      // Clear canvas each frame
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Redraw arena
       drawArena();
 
-      // Draw trail
       ctx.beginPath();
       ctx.strokeStyle = 'lightblue';
       ctx.lineWidth = 3;
@@ -153,7 +143,6 @@
       }
       ctx.stroke();
 
-      // Draw Earth
       ctx.beginPath();
       ctx.arc(earthX, earthY, earthRadius, 0, Math.PI * 2);
       ctx.fillStyle = 'blue';
@@ -168,7 +157,6 @@
     let player;
     const playerContainer = document.getElementById('audio-video');
 
-    // Load YouTube IFrame API script dynamically
     let tag = document.createElement('script');
     tag.src = "https://www.youtube.com/iframe_api";
     document.head.appendChild(tag);
@@ -201,8 +189,7 @@
 
     songSelect.addEventListener('change', () => {
       if (player && player.loadVideoById) {
-        const videoId = songSelect.value;
-        player.loadVideoById(videoId);
+        player.loadVideoById(songSelect.value);
         player.setLoop(true);
         player.setVolume(volumeSlider.value);
       }
