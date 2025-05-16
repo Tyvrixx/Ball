@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>YouTube Play Test</title>
+<style>
+  body, html {
+    margin: 0; padding: 0; height: 100%;
+    display: flex; justify-content: center; align-items: center;
+    background: black; color: white; font-family: sans-serif;
+  }
+  #loadingScreen {
+    font-size: 2rem; cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<div id="loadingScreen">Tap to start music</div>
+<div id="player" style="width:0;height:0;opacity:0;position:absolute;"></div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+  let playerReady = false;
+  let player;
+
+  function onYouTubeIframeAPIReady() {
+    console.log('YouTube API ready, creating player...');
+    player = new YT.Player('player', {
+      height: '0',
+      width: '0',
+      videoId: 'yJsGC16hLP8',
+      playerVars: {
+        autoplay: 0,
+        controls: 0,
+        mute: 1,
+        loop: 1,
+        playlist: 'yJsGC16hLP8',
+        modestbranding: 1,
+        rel: 0,
+        enablejsapi: 1,
+        origin: window.location.origin
+      },
+      events: {
+        onReady: () => {
+          playerReady = true;
+          console.log('Player ready');
+        },
+        onStateChange: (event) => {
+          console.log('Player state changed:', event.data);
+        }
+      }
+    });
+  }
+
+  const loadingScreen = document.getElementById('loadingScreen');
+
+  loadingScreen.addEventListener('click', () => {
+    if (!playerReady) {
+      alert('Player not ready yet, please wait...');
+      return;
+    }
+    console.log('User clicked: unmuting and playing video');
+    player.unMute();
+    player.setVolume(100);
+    try {
+      player.playVideo();
+      console.log('playVideo() called');
+    } catch (err) {
+      console.error('playVideo() error:', err);
+    }
+    loadingScreen.style.display = 'none';
+  });
+</script>
+
+</body>
+</html>
